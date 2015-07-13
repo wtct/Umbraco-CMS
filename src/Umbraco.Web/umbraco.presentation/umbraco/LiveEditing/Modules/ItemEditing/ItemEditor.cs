@@ -384,7 +384,11 @@ namespace umbraco.presentation.LiveEditing.Modules.ItemEditing
                     // add the item's contents to the output
                     HtmlGenericControl itemUpdate = new HtmlGenericControl("umbraco:itemupdate");
                     itemUpdate.Attributes["itemId"] = affectedItem.ItemId.ToString();
-					itemUpdate.InnerHtml = TemplateUtilities.ParseInternalLinks(itemRenderOutput.ToString());
+                    
+                    string html = itemRenderOutput.ToString();
+                    TemplateUtilities.ParseInternalLinks(ref html);
+                    itemUpdate.InnerHtml = html;
+
                     itemUpdate.EnableViewState = false;
                     m_Manager.AddClientOutput(itemUpdate);
                 }
