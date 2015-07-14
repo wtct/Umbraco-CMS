@@ -7,6 +7,7 @@ using Umbraco.Core;
 using Umbraco.Core.Logging;
 using Umbraco.Web.PublishedCache;
 using umbraco.cms.businesslogic.web;
+using System.Web;
 
 namespace Umbraco.Web.Routing
 {
@@ -39,9 +40,18 @@ namespace Umbraco.Web.Routing
 
             if (string.IsNullOrWhiteSpace(route))
             {
-                LogHelper.Warn<DefaultUrlProvider>(
-                    "Couldn't find any page with nodeId={0}. This is most likely caused by the page not being published.",
-                    () => id);
+                string errorMessage = string.Format("Couldn't find any page with nodeId = {0}. Url: {1}.", id, current.AbsoluteUri);
+                
+                if (umbracoContext.PageId != null)
+                {                   
+                    if (HttpContext.Current.Request.UrlReferrer != null)
+                        errorMessage = string.Format("Couldn't find any page with the nodeId = {0}. Current.PageId = {1}. Referrer: {2}", id, umbracoContext.PageId, HttpContext.Current.Request.UrlReferrer.AbsoluteUri);
+                    else
+                        errorMessage = string.Format("Couldn't find any page with the nodeId = {0}. Current.PageId = {1}.", id, umbracoContext.PageId);
+                }
+
+                LogHelper.Warn<DefaultUrlProvider>(errorMessage);
+
                 return null;
             }
 
