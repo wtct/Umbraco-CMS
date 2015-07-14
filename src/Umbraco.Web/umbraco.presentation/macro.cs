@@ -627,14 +627,14 @@ namespace umbraco
         /// <returns></returns>
         /// <remarks>
         /// Depending on the type of macro, this will return the result as a string or as a control. This also 
-        /// checks to see if preview mode is activated, if it is then we don't return anything from cache.
+        /// checks to see if preview mode is activated, if it is then we don't return anything from cache if macro is cached by page
         /// </remarks>
         private void GetMacroFromCache(out string macroHtml, out Control macroControl)
         {
             macroHtml = null;
             macroControl = null;
 
-            if (UmbracoContext.Current.InPreviewMode == false && Model.CacheDuration > 0)
+            if ((UmbracoContext.Current.InPreviewMode == false || !CacheByPage) && Model.CacheDuration > 0)
             {
                 var macroFile = GetMacroFile(Model);
                 var fileInfo = new FileInfo(HttpContext.Current.Server.MapPath(macroFile));
