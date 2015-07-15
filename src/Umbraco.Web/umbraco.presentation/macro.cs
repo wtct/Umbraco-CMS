@@ -656,13 +656,19 @@ namespace umbraco
                                       string.Format("Macro removed from cache due to file change '{0}'.",
                                                     Model.CacheIdentifier));
                         }
+                        else if (IsQueryStringMacroRefreshing(Model))
+                        {
+                            macroHtml = null;
+                            TraceInfo("renderMacro",
+                                      string.Format("Macro removed from cache due to QueryString refreshing '{0}'.",
+                                                    Model.CacheIdentifier));
+                        }
                         else
                         {
                             TraceInfo("renderMacro",
                                       string.Format("Macro Content loaded from cache '{0}'.",
                                                     Model.CacheIdentifier));
                         }
-
                     }
                 }
                 else
@@ -677,10 +683,17 @@ namespace umbraco
 
                         if (MacroNeedsToBeClearedFromCache(Model, CacheKeys.MacroControlDateAddedCacheKey + Model.CacheIdentifier, fileInfo))
                         {
+                            macroControl = null;
                             TraceInfo("renderMacro",
                                       string.Format("Macro removed from cache due to file change '{0}'.",
                                                     Model.CacheIdentifier));
-                            macroControl = null;
+                        }
+                        else if (IsQueryStringMacroRefreshing(Model))
+                        {
+                            macroHtml = null;
+                            TraceInfo("renderMacro",
+                                      string.Format("Macro removed from cache due to QueryString refreshing '{0}'.",
+                                                    Model.CacheIdentifier));
                         }
                         else
                         {
@@ -688,7 +701,6 @@ namespace umbraco
                                       string.Format("Macro Control loaded from cache '{0}'.",
                                                     Model.CacheIdentifier));
                         }
-
                     }
                 }
             }
@@ -714,6 +726,47 @@ namespace umbraco
                 default:
                     return null;
             }
+        }
+
+        private bool IsQueryStringMacroRefreshing(MacroModel model)
+        {
+            if (GlobalSettings.QueryStringMacroRefreshing)
+            {
+                bool refreshMacro;
+
+                string qsUmbRefreshMacros = HttpContext.Current.Request.QueryString["umbRefreshMacros"];
+
+                switch (qsUmbRefreshMacros)
+                {
+                    case "CachedByPage":
+                    case "p":
+                        refreshMacro = model.CacheByPage;
+                        break;
+                    case "CachedByMember":
+                    case "m":
+                        refreshMacro = model.CacheByMember;
+                        break;
+                    case "CachedGlobally":
+                    case "g":
+                        refreshMacro = !model.CacheByPage;
+                        break;
+                    case "AllCached":
+                    case "a":
+                        refreshMacro = true;
+                        break;
+                    default:
+                        refreshMacro = false;
+                        break;
+                }
+
+                if (refreshMacro)
+                {
+                    TraceInfo("renderMacro", string.Format("Macro needs to be removed from cache due to umbRefreshMacros QueryString variable '{0}'.", model.CacheIdentifier));
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
