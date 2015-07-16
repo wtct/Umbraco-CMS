@@ -455,7 +455,7 @@ namespace umbraco
                                 }
                             }
                         case (int) MacroTypes.XSLT:                            
-                            macroControl = LoadMacroXslt(this, Model, pageElements, true);
+                            macroControl = LoadMacroXslt(this, Model, pageElements, true, out renderFailed);
                             break;                                                           
                         case (int) MacroTypes.Script:
 
@@ -870,8 +870,10 @@ namespace umbraco
 
         // gets the control for the macro, using GetXsltTransform methods for execution
         // will pick XmlDocument or Navigator mode depending on the capabilities of the published caches
-        internal Control LoadMacroXslt(macro macro, MacroModel model, Hashtable pageElements, bool throwError)
+        internal Control LoadMacroXslt(macro macro, MacroModel model, Hashtable pageElements, bool throwError, out bool renderFailed)
         {
+            renderFailed = true;
+
             if (XsltFile.Trim() == string.Empty)
             {
                 TraceWarn("macro", "Xslt is empty");
@@ -916,6 +918,9 @@ namespace umbraco
                 if (HttpContext.Current.Request.QueryString["umbDebug"] != null && GlobalSettings.DebugMode)
                 {
                     var outerXml = macroXml == null ? macroNavigator.OuterXml : macroXml.OuterXml;
+
+                    renderFailed = false;
+
                     return
                         new LiteralControl("<div style=\"border: 2px solid green; padding: 5px;\"><b>Debug from " +
                                            macro.Name +
@@ -935,6 +940,8 @@ namespace umbraco
                             ? GetXsltTransformResult(macroNavigator, contentNavigator, xsltFile) // better?
                             : GetXsltTransformResult(macroXml, xsltFile); // document
                             var result = CreateControlsFromText(transformed);
+
+                            renderFailed = false;
 
                             return result;
                         }
@@ -977,7 +984,9 @@ namespace umbraco
         // gets the control for the macro, using GetXsltTransform methods for execution
         public Control loadMacroXSLT(macro macro, MacroModel model, Hashtable pageElements)
         {
-            return LoadMacroXslt(macro, model, pageElements, false);
+            bool renderFailed;
+
+            return LoadMacroXslt(macro, model, pageElements, false, out renderFailed);
         }
 
         #endregion
