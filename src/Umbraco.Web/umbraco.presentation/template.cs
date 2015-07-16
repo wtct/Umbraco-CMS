@@ -380,7 +380,9 @@ namespace umbraco
 		[Obsolete("Use Umbraco.Web.Templates.TemplateUtilities.ParseInternalLinks instead")]
         public static string ParseInternalLinks(string pageContents)
 		{
-			return Umbraco.Web.Templates.TemplateUtilities.ParseInternalLinks(pageContents);
+			Umbraco.Web.Templates.TemplateUtilities.ParseInternalLinks(ref pageContents);
+
+            return pageContents;
 		}
 
         /// <summary>

@@ -161,7 +161,7 @@ namespace umbraco
                 string text = sw.ToString();
 
                 // filter / parse internal links - although this should be done elsewhere!
-                text = TemplateUtilities.ParseInternalLinks(text);
+                TemplateUtilities.ParseInternalLinks(ref text);
 
                 // filter / add preview banner
                 if (UmbracoContext.Current.InPreviewMode)

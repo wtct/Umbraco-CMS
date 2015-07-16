@@ -203,8 +203,9 @@ namespace Umbraco.Web
                     //reset the content type
 				    _umbracoContext.HttpContext.Response.ContentType = contentType;
 
+                    html = output.ToString();
 					//Now, we need to ensure that local links are parsed
-					html = TemplateUtilities.ParseInternalLinks(output.ToString());
+                    TemplateUtilities.ParseInternalLinks(ref html);
 				}
 			}
 
