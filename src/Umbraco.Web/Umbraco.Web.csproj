@@ -470,7 +470,15 @@
     <Compile Include="umbraco.presentation\umbraco\members\EditMember.aspx.cs">
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
+    <Compile Include="umbraco.presentation\umbraco\plugins\tinymce3\insertDedicatedImage.aspx.cs">
+      <DependentUpon>insertDedicatedImage.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="umbraco.presentation\umbraco\plugins\tinymce3\insertDedicatedImage.aspx.designer.cs">
+      <DependentUpon>insertDedicatedImage.aspx</DependentUpon>
+    </Compile>
     <Compile Include="umbraco.presentation\umbraco\plugins\tinymce3\JsonSpellCheckerResult.cs" />
+    <Compile Include="umbraco.presentation\umbraco\Trees\loadDedicatedMedia.cs" />
     <Compile Include="umbraco.presentation\umbraco\users\EditUser.aspx.cs">
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
@@ -1850,6 +1858,9 @@
       <SubType>ASPXCodeBehind</SubType>
     </Content>
     <Content Include="umbraco.presentation\umbraco\dialogs\mediaPicker.aspx" />
+    <Content Include="umbraco.presentation\umbraco\plugins\tinymce3\insertDedicatedImage.aspx">
+      <SubType>ASPXCodeBehind</SubType>
+    </Content>
     <Content Include="umbraco.presentation\umbraco\webservices\MacroContainerService.asmx" />
     <Content Include="umbraco.presentation\umbraco\developer\Xslt\xsltVisualize.aspx" />
     <Content Include="umbraco.presentation\umbraco\dialogs\empty.htm" />
