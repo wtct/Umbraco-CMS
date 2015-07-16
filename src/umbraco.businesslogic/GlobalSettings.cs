@@ -450,6 +450,28 @@ namespace umbraco
         }
 
         /// <summary>
+        /// Gets if refreshing macros by umbRefreshMacro QueryString variable is allowed
+        /// </summary>
+        /// <value>Returns true if refreshing is allowed/value>
+        public static bool QueryStringMacroRefreshing
+        {
+            get
+            {
+                string value = ConfigurationManager.AppSettings["umbracoQueryStringMacroRefreshing"];
+                bool result;
+                if (!string.IsNullOrEmpty(value) && bool.TryParse(value, out result))
+                    return result;
+
+                return false;
+            }
+            set
+            {
+                if (QueryStringMacroRefreshing != value)
+                    SaveSetting("umbracoQueryStringMacroRefreshing", value ? "true" : "false");
+            }
+        }
+
+        /// <summary>
         /// Gets the Memcached Namespace for current CMS instance
         /// </summary>
         /// <value>Memcached namespace</value>
