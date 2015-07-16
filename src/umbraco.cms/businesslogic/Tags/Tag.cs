@@ -7,6 +7,7 @@ using umbraco.BusinessLogic;
 using umbraco.interfaces;
 using umbraco.cms.businesslogic.media;
 using umbraco.cms.businesslogic.web;
+using umbraco.cms.helpers;
 
 namespace umbraco.cms.businesslogic.Tags
 {
@@ -53,10 +54,10 @@ namespace umbraco.cms.businesslogic.Tags
 
         public static void AssociateTagToNode(int nodeId, int tagId)
         {
-            SqlHelper.ExecuteNonQuery("INSERT INTO cmsTagRelationShip(nodeId,tagId) VALUES (@nodeId, @tagId)",
-                            SqlHelper.CreateParameter("@nodeId", nodeId),
-                            SqlHelper.CreateParameter("@tagId", tagId)
-                        );
+            SqlHelper.ExecuteNonQuery("if not exists(select nodeId from cmsTagRelationShip where nodeId = @nodeId and tagId = @tagId) INSERT INTO cmsTagRelationShip(nodeId,tagId) VALUES (@nodeId, @tagId)",
+                SqlHelper.CreateParameter("@nodeId", nodeId),
+                SqlHelper.CreateParameter("@tagId", tagId)
+            );
         }
 
         public static void AddTagsToNode(int nodeId, string tags, string group)
@@ -193,9 +194,14 @@ namespace umbraco.cms.businesslogic.Tags
 
         public static int AddTag(string tag, string group)
         {
-            SqlHelper.ExecuteNonQuery("INSERT INTO cmsTags(tag,[group]) VALUES (@tag,@group)",
+            SqlHelper.ExecuteNonQuery(@"IF NOT EXISTS(SELECT Id FROM cmsTags WHERE FormatedForUrl = @formatedForUrl)
+	                                        INSERT INTO cmsTags(Tag, [Group], FormatedForUrl) VALUES (@Tag, @Group, @FormatedForUrl)
+                                        ELSE
+	                                        INSERT INTO cmsTags(Tag, [Group], FormatedForUrl) VALUES (@Tag, @group, @FormatedForUrl + '_' + CAST(IDENT_CURRENT('cmsTags') AS VARCHAR(10)))",                                                                                                                                                                                           
                 SqlHelper.CreateParameter("@tag", tag.Trim()),
-                SqlHelper.CreateParameter("@group", group));
+                SqlHelper.CreateParameter("@group", group),
+                SqlHelper.CreateParameter("@formatedForUrl", url.FormatUrl(tag.Trim().ToLower())));
+
             return GetTagId(tag, group);
         }
 
