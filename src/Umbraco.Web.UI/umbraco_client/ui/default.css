@@ -260,6 +260,9 @@ th
 	color: #333333;
 }
 
+#body_NameTxt {
+    width: 480px;
+}
 
 .guiInputButton {
 	font-family: Trebuchet MS, Lucida Grande, verdana, arial;

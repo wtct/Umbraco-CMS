@@ -605,6 +605,7 @@
     <Content Include="Config\Splashes\noNodes.aspx" />
     <Content Include="Umbraco\Create\PartialView.ascx" />
     <Content Include="Umbraco\Create\User.ascx" />
+    <Content Include="Umbraco\Images\Editor\dedicated_image.gif" />
     <Content Include="Umbraco\Images\PinnedIcons\task_content.ico" />
     <Content Include="Umbraco\Images\PinnedIcons\task_default.ico" />
     <Content Include="Umbraco\Images\PinnedIcons\task_developer.ico" />
@@ -613,6 +614,9 @@
     <Content Include="Umbraco\Images\PinnedIcons\task_settings.ico" />
     <Content Include="Umbraco\Images\PinnedIcons\task_users.ico" />
     <Content Include="Umbraco\Images\PinnedIcons\umb.ico" />
+    <Content Include="Umbraco\Plugins\Tinymce3\insertDedicatedImage.aspx">
+      <SubType>ASPXCodeBehind</SubType>
+    </Content>
     <Content Include="Umbraco\Xslt\Web.config">
       <SubType>
       </SubType>
@@ -1043,6 +1047,16 @@
     <Content Include="Umbraco_Client\Tinymce3\Plugins\Bbcode\editor_plugin_src.js" />
     <Content Include="Umbraco_Client\Tinymce3\Plugins\Contextmenu\editor_plugin.js" />
     <Content Include="Umbraco_Client\Tinymce3\Plugins\Contextmenu\editor_plugin_src.js" />
+    <Content Include="Umbraco_Client\Tinymce3\Plugins\Umbracodedicatedimg\editor_plugin_src.js" />
+    <Content Include="Umbraco_Client\Tinymce3\Plugins\Umbracodedicatedimg\js\image.js" />
+    <Content Include="Umbraco_Client\Tinymce3\Plugins\Umbracodedicatedimg\langs\en_dlg.js" />
+    <Content Include="Umbraco_Client\Tinymce3\Plugins\Umbracodedicatedimg\langs\en_us_dlg.js" />
+    <Content Include="Umbraco_Client\Tinymce3\Plugins\Umbracodedicatedimg\langs\he_dlg.js" />
+    <Content Include="Umbraco_Client\Tinymce3\Plugins\Umbracodedicatedimg\langs\it_dlg.js" />
+    <Content Include="Umbraco_Client\Tinymce3\Plugins\Umbracodedicatedimg\langs\ja_dlg.js" />
+    <Content Include="Umbraco_Client\Tinymce3\Plugins\Umbracodedicatedimg\langs\ru_dlg.js" />
+    <Content Include="Umbraco_Client\Tinymce3\Plugins\Umbracodedicatedimg\langs\sv_dlg.js" />
+    <Content Include="Umbraco_Client\Tinymce3\Plugins\Umbracodedicatedimg\langs\zh_dlg.js" />
     <Content Include="Umbraco_Client\Tinymce3\Plugins\Directionality\editor_plugin.js" />
     <Content Include="Umbraco_Client\Tinymce3\Plugins\Directionality\editor_plugin_src.js" />
     <Content Include="Umbraco_Client\Tinymce3\Plugins\Emotions\editor_plugin.js" />

@@ -1,11 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Reflection;
@@ -19,14 +17,11 @@ using System.Web.UI.WebControls;
 using System.Xml;
 using System.Xml.XPath;
 using System.Xml.Xsl;
-using StackExchange.Profiling;
 using Umbraco.Core;
 using Umbraco.Core.Cache;
-using Umbraco.Core.Dynamics;
 using Umbraco.Core.Events;
 using Umbraco.Core.IO;
 using Umbraco.Core.Logging;
-using Umbraco.Core.Models;
 using Umbraco.Core.Xml.XPath;
 using Umbraco.Core.Profiling;
 using umbraco.interfaces;
@@ -35,7 +30,6 @@ using Umbraco.Web.Cache;
 using Umbraco.Web.Macros;
 using Umbraco.Web.Templates;
 using umbraco.BusinessLogic;
-using umbraco.cms.businesslogic;
 using umbraco.cms.businesslogic.macro;
 using umbraco.DataLayer;
 using umbraco.NodeFactory;
@@ -46,7 +40,8 @@ using File = System.IO.File;
 using Macro = umbraco.cms.businesslogic.macro.Macro;
 using MacroErrorEventArgs = Umbraco.Core.Events.MacroErrorEventArgs;
 using Member = umbraco.cms.businesslogic.member.Member;
-using Property = umbraco.NodeFactory.Property;
+using Enyim.Caching;
+using Enyim.Caching.Memcached;
 
 namespace umbraco
 {
@@ -68,6 +63,13 @@ namespace umbraco
         protected static ISqlHelper SqlHelper
         {
             get { return Application.SqlHelper; }
+        }
+
+        private static Lazy<MemcachedClient> lazyMemcachedClient = new Lazy<MemcachedClient>();
+
+        protected static MemcachedClient memcachedClient
+        {
+            get { return lazyMemcachedClient.Value; }
         }
 
         static macro()
@@ -455,7 +457,7 @@ namespace umbraco
                                 }
                             }
                         case (int) MacroTypes.XSLT:                            
-                            macroControl = LoadMacroXslt(this, Model, pageElements, true);
+                            macroControl = LoadMacroXslt(this, Model, pageElements, true, out renderFailed);
                             break;                                                           
                         case (int) MacroTypes.Script:
 
@@ -557,6 +559,7 @@ namespace umbraco
 
                         using (DisposableTimer.DebugDuration<macro>("Saving MacroContent To Cache: " + Model.CacheIdentifier))
                         {
+                            TimeSpan cacheInterval = TimeSpan.FromSeconds(Model.CacheDuration);
 
                             // NH: Scripts and XSLT can be generated as strings, but not controls as page events wouldn't be hit (such as Page_Load, etc)
                             if (CacheMacroAsString(Model))
@@ -571,12 +574,25 @@ namespace umbraco
                                     outputCacheString = sw.ToString();
                                 }
 
+                                string cacheKey = CacheKeys.MacroHtmlCacheKey + Model.CacheIdentifier;
+
                                 //insert the cache string result
-                                ApplicationContext.Current.ApplicationCache.InsertCacheItem(
-                                    CacheKeys.MacroHtmlCacheKey + Model.CacheIdentifier,
-                                    CacheItemPriority.NotRemovable,
-                                    new TimeSpan(0, 0, Model.CacheDuration),
-                                    () => outputCacheString);
+                                if (GlobalSettings.UseMemcached)
+                                {
+                                    memcachedClient.Store(StoreMode.Set, GlobalSettings.MemcachedNamespace + cacheKey, outputCacheString, cacheInterval);
+
+                                    TraceInfo("renderMacro", string.Format("Macro Content saved to Memcached '{0}'.", Model.CacheIdentifier));
+                                }
+                                else
+                                {
+                                    ApplicationContext.Current.ApplicationCache.InsertCacheItem(
+                                        cacheKey,
+                                        CacheItemPriority.NotRemovable,
+                                        cacheInterval,
+                                        () => outputCacheString);
+
+                                    TraceInfo("renderMacro", string.Format("Macro Content saved to cache '{0}'.", Model.CacheIdentifier));
+                                }
 
                                 dateAddedCacheKey = CacheKeys.MacroHtmlDateAddedCacheKey + Model.CacheIdentifier;
 
@@ -584,9 +600,6 @@ namespace umbraco
                                 // otherwise it is rendered twice
                                 if (!(macroControl is LiteralControl))
                                     macroControl = new LiteralControl(outputCacheString);
-
-                                TraceInfo("renderMacro",
-                                          string.Format("Macro Content saved to cache '{0}'.", Model.CacheIdentifier));
                             }
                             else
                             {
@@ -594,24 +607,21 @@ namespace umbraco
                                 ApplicationContext.Current.ApplicationCache.InsertCacheItem(
                                     CacheKeys.MacroControlCacheKey + Model.CacheIdentifier,
                                     CacheItemPriority.NotRemovable,
-                                    new TimeSpan(0, 0, Model.CacheDuration),
+                                    cacheInterval,
                                     () => new MacroCacheContent(macroControl, macroControl.ID));
 
                                 dateAddedCacheKey = CacheKeys.MacroControlDateAddedCacheKey + Model.CacheIdentifier;
 
-                                TraceInfo("renderMacro",
-                                          string.Format("Macro Control saved to cache '{0}'.", Model.CacheIdentifier));
+                                TraceInfo("renderMacro", string.Format("Macro Control saved to cache '{0}'.", Model.CacheIdentifier));
                             }
 
                             //insert the date inserted (so we can check file modification date)
                             ApplicationContext.Current.ApplicationCache.InsertCacheItem(
                                 dateAddedCacheKey,
                                 CacheItemPriority.NotRemovable,
-                                new TimeSpan(0, 0, Model.CacheDuration),
-                                () => DateTime.Now);
-                            
-                        }
-                        
+                                cacheInterval,
+                                () => DateTime.Now);                            
+                        }                        
                     }
                 }
             }
@@ -627,22 +637,26 @@ namespace umbraco
         /// <returns></returns>
         /// <remarks>
         /// Depending on the type of macro, this will return the result as a string or as a control. This also 
-        /// checks to see if preview mode is activated, if it is then we don't return anything from cache.
+        /// checks to see if preview mode is activated, if it is then we don't return anything from cache if macro is cached by page
         /// </remarks>
         private void GetMacroFromCache(out string macroHtml, out Control macroControl)
         {
             macroHtml = null;
             macroControl = null;
 
-            if (UmbracoContext.Current.InPreviewMode == false && Model.CacheDuration > 0)
+            if ((UmbracoContext.Current.InPreviewMode == false || !CacheByPage) && Model.CacheDuration > 0)
             {
                 var macroFile = GetMacroFile(Model);
                 var fileInfo = new FileInfo(HttpContext.Current.Server.MapPath(macroFile));
 
                 if (CacheMacroAsString(Model))
                 {
-                    macroHtml = ApplicationContext.Current.ApplicationCache.GetCacheItem<string>(
-                        CacheKeys.MacroHtmlCacheKey + Model.CacheIdentifier);
+                    string cacheKey = CacheKeys.MacroHtmlCacheKey + Model.CacheIdentifier;
+
+                    if (GlobalSettings.UseMemcached)
+                        macroHtml = memcachedClient.Get(GlobalSettings.MemcachedNamespace + cacheKey) as string;
+                    else
+                        macroHtml = ApplicationContext.Current.ApplicationCache.GetCacheItem<string>(cacheKey);
 
                     // FlorisRobbemont: 
                     // An empty string means: macroHtml has been cached before, but didn't had any output (Macro doesn't need to be rendered again)
@@ -656,13 +670,20 @@ namespace umbraco
                                       string.Format("Macro removed from cache due to file change '{0}'.",
                                                     Model.CacheIdentifier));
                         }
-                        else
+                        else if (IsQueryStringMacroRefreshing(Model))
                         {
+                            macroHtml = null;
                             TraceInfo("renderMacro",
-                                      string.Format("Macro Content loaded from cache '{0}'.",
+                                      string.Format("Macro removed from cache due to QueryString refreshing '{0}'.",
                                                     Model.CacheIdentifier));
                         }
-
+                        else
+                        {
+                            if (GlobalSettings.UseMemcached)
+                                TraceInfo("renderMacro", string.Format("Macro Content loaded from Memcached '{0}'.", Model.CacheIdentifier));
+                            else
+                                TraceInfo("renderMacro", string.Format("Macro Content loaded from cache '{0}'.", Model.CacheIdentifier));
+                        }
                     }
                 }
                 else
@@ -677,10 +698,17 @@ namespace umbraco
 
                         if (MacroNeedsToBeClearedFromCache(Model, CacheKeys.MacroControlDateAddedCacheKey + Model.CacheIdentifier, fileInfo))
                         {
+                            macroControl = null;
                             TraceInfo("renderMacro",
                                       string.Format("Macro removed from cache due to file change '{0}'.",
                                                     Model.CacheIdentifier));
-                            macroControl = null;
+                        }
+                        else if (IsQueryStringMacroRefreshing(Model))
+                        {
+                            macroHtml = null;
+                            TraceInfo("renderMacro",
+                                      string.Format("Macro removed from cache due to QueryString refreshing '{0}'.",
+                                                    Model.CacheIdentifier));
                         }
                         else
                         {
@@ -688,7 +716,6 @@ namespace umbraco
                                       string.Format("Macro Control loaded from cache '{0}'.",
                                                     Model.CacheIdentifier));
                         }
-
                     }
                 }
             }
@@ -714,6 +741,47 @@ namespace umbraco
                 default:
                     return null;
             }
+        }
+
+        private bool IsQueryStringMacroRefreshing(MacroModel model)
+        {
+            if (GlobalSettings.QueryStringMacroRefreshing)
+            {
+                bool refreshMacro;
+
+                string qsUmbRefreshMacros = HttpContext.Current.Request.QueryString["umbRefreshMacros"];
+
+                switch (qsUmbRefreshMacros)
+                {
+                    case "CachedByPage":
+                    case "p":
+                        refreshMacro = model.CacheByPage;
+                        break;
+                    case "CachedByMember":
+                    case "m":
+                        refreshMacro = model.CacheByMember;
+                        break;
+                    case "CachedGlobally":
+                    case "g":
+                        refreshMacro = !model.CacheByPage;
+                        break;
+                    case "AllCached":
+                    case "a":
+                        refreshMacro = true;
+                        break;
+                    default:
+                        refreshMacro = false;
+                        break;
+                }
+
+                if (refreshMacro)
+                {
+                    TraceInfo("renderMacro", string.Format("Macro needs to be removed from cache due to umbRefreshMacros QueryString variable '{0}'.", model.CacheIdentifier));
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -870,8 +938,10 @@ namespace umbraco
 
         // gets the control for the macro, using GetXsltTransform methods for execution
         // will pick XmlDocument or Navigator mode depending on the capabilities of the published caches
-        internal Control LoadMacroXslt(macro macro, MacroModel model, Hashtable pageElements, bool throwError)
+        internal Control LoadMacroXslt(macro macro, MacroModel model, Hashtable pageElements, bool throwError, out bool renderFailed)
         {
+            renderFailed = true;
+
             if (XsltFile.Trim() == string.Empty)
             {
                 TraceWarn("macro", "Xslt is empty");
@@ -916,6 +986,9 @@ namespace umbraco
                 if (HttpContext.Current.Request.QueryString["umbDebug"] != null && GlobalSettings.DebugMode)
                 {
                     var outerXml = macroXml == null ? macroNavigator.OuterXml : macroXml.OuterXml;
+
+                    renderFailed = false;
+
                     return
                         new LiteralControl("<div style=\"border: 2px solid green; padding: 5px;\"><b>Debug from " +
                                            macro.Name +
@@ -935,6 +1008,8 @@ namespace umbraco
                             ? GetXsltTransformResult(macroNavigator, contentNavigator, xsltFile) // better?
                             : GetXsltTransformResult(macroXml, xsltFile); // document
                             var result = CreateControlsFromText(transformed);
+
+                            renderFailed = false;
 
                             return result;
                         }
@@ -977,7 +1052,9 @@ namespace umbraco
         // gets the control for the macro, using GetXsltTransform methods for execution
         public Control loadMacroXSLT(macro macro, MacroModel model, Hashtable pageElements)
         {
-            return LoadMacroXslt(macro, model, pageElements, false);
+            bool renderFailed;
+
+            return LoadMacroXslt(macro, model, pageElements, false, out renderFailed);
         }
 
         #endregion
@@ -1847,9 +1924,8 @@ namespace umbraco
                 // Create a new 'HttpWebRequest' Object to the mentioned URL.
                 string retVal = string.Empty;
                 string protocol = GlobalSettings.UseSSL ? "https" : "http";
-                string url = string.Format("{0}://{1}:{2}{3}/macroResultWrapper.aspx?{4}", protocol,
+                string url = string.Format("{0}://{1}{2}/macroResultWrapper.aspx?{4}", protocol,
                                            HttpContext.Current.Request.ServerVariables["SERVER_NAME"],
-                                           HttpContext.Current.Request.ServerVariables["SERVER_PORT"],
                                            IOHelper.ResolveUrl(SystemDirectories.Umbraco), querystring);
 
                 var myHttpWebRequest = (HttpWebRequest)WebRequest.Create(url);

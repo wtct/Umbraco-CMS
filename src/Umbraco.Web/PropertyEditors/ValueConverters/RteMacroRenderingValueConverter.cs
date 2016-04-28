@@ -64,7 +64,7 @@ namespace Umbraco.Web.PropertyEditors.ValueConverters
 	        var sourceString = source.ToString();
 
             // ensures string is parsed for {localLink} and urls are resolved correctly
-            sourceString = TemplateUtilities.ParseInternalLinks(sourceString, preview);
+            TemplateUtilities.ParseInternalLinks(ref sourceString, preview);
 	        sourceString = TemplateUtilities.ResolveUrlsFromTextString(sourceString);
             // ensure string is parsed for macros and macros are executed correctly
             sourceString = RenderRteMacros(sourceString, preview);

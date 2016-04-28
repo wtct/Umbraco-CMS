@@ -18,9 +18,21 @@
             nl.width.value = dom.getAttrib(n, 'width');
             nl.height.value = dom.getAttrib(n, 'height');
             nl.alt.value = dom.getAttrib(n, 'alt');
-            nl.orgHeight.value = dom.getAttrib(n, 'rel').split(",")[1];
-            nl.orgWidth.value = dom.getAttrib(n, 'rel').split(",")[0];
-            
+
+            var relAttr = dom.getAttrib(n, 'rel')
+
+            if (relAttr) {
+                nl.orgHeight.value = rel.split(",")[1];
+                nl.orgWidth.value = rel.split(",")[0];
+            }
+            else if (nl.width.value && nl.height.value) {
+                nl.orgHeight.value = nl.height.value;
+                nl.orgWidth.value = nl.width.value;
+            }
+            else {
+                nl.orgHeight.value = nl.height.value = $(n).height();
+                nl.orgWidth.value = nl.width.value = $(n).width();
+            }            
         }
 
         // If option enabled default contrain proportions to checked

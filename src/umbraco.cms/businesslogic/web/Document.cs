@@ -431,6 +431,24 @@ namespace umbraco.cms.businesslogic.web
             ApplicationContext.Current.Services.ContentService.RePublishAll();
         }
 
+        public void RePublish()
+        {
+            XmlDocument xd = new XmlDocument();
+
+            try
+            {
+                var version = ApplicationContext.Current.Services.ContentService.GetPublishedVersion(Id);
+
+                if (version != null)
+                    new Document(Id, version.Version).XmlGenerate(xd);
+            }
+            catch (Exception ee)
+            {
+                Log.Add(LogTypes.Error, User.GetUser(0), Id,
+                        string.Format("Error generating xml: {0}", ee));
+            }
+        }
+
         public static void RegeneratePreviews()
         {
             XmlDocument xd = new XmlDocument();

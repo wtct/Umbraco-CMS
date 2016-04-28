@@ -373,6 +373,28 @@
             return false;
         }
 
+        $.extend({
+            getUrlVars: function () {
+                var vars = [], hash;
+                var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1, window.location.href.indexOf('#')).split('&');
+                for (var i = 0; i < hashes.length; i++) {
+                    hash = hashes[i].split('=');
+                    vars.push(hash[0]);
+                    vars[hash[0]] = hash[1];
+                }
+                return vars;
+            },
+            getUrlVar: function (name) {
+                return $.getUrlVars()[name];
+            }
+        });
+
+        $(window).load(function () {
+            var id = $.getUrlVar("enid");
+            if (id) {
+                openContent(id);
+            }
+        });
     </script>
     <%if(string.IsNullOrEmpty(Request["umbDebug"]) == false && umbraco.GlobalSettings.DebugMode)
       {

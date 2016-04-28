@@ -161,7 +161,7 @@ namespace umbraco
                 string text = sw.ToString();
 
                 // filter / parse internal links - although this should be done elsewhere!
-                text = TemplateUtilities.ParseInternalLinks(text);
+                TemplateUtilities.ParseInternalLinks(ref text);
 
                 // filter / add preview banner
                 if (UmbracoContext.Current.InPreviewMode)
@@ -184,9 +184,37 @@ namespace umbraco
                     }
                 }
 
+                var args = new RenderPageEventArgs()
+                {
+                    Page = _upage,
+                    Context = Context
+                };
+
+                FireBeforeWritingPageContentToOutputStream(ref text, args);
+
+                if (args.Cancel) return;
+
                 // render
                 writer.Write(text);
             }
+        }
+
+        /// <summary>
+        /// The render page event handler
+        /// </summary>
+        public delegate void RenderPageEventHandler(object sender, ref string pageContent, RenderPageEventArgs e);
+        /// <summary>
+        /// occurs before the umbraco page content is writing to output stream.
+        /// </summary>
+        public static event RenderPageEventHandler BeforeWritingPageContentToOutputStream;
+        /// <summary>
+        /// Raises the <see cref="FireBeforeWritingPageContentToOutputStream"/> event.
+        /// </summary>
+        /// <param name="e">The <see cref="System.EventArgs"/> instance containing the event data.</param>
+        protected internal virtual void FireBeforeWritingPageContentToOutputStream(ref string pageContent, RenderPageEventArgs e)
+        {
+            if (BeforeWritingPageContentToOutputStream != null)
+                BeforeWritingPageContentToOutputStream(this, ref pageContent, e);
         }
 
         /// <summary>
@@ -219,7 +247,6 @@ namespace umbraco
         {
             if (AfterRequestInit != null)
                 AfterRequestInit(this, e);
-
         }
     }
 
@@ -229,5 +256,12 @@ namespace umbraco
         public HttpContext Context { get; internal set; }
         public string Url { get; internal set; }
         public int PageId { get; internal set; }
+    }
+
+    public class RenderPageEventArgs : System.ComponentModel.CancelEventArgs
+    {
+        public page Page { get; internal set; }
+        public HttpContext Context { get; internal set; }
+        public string Url { get; internal set; }
     }
 }

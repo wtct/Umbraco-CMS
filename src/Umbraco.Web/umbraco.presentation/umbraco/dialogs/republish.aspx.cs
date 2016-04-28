@@ -44,7 +44,7 @@ namespace umbraco.cms.presentation
                 var c = doc.Children;
                 foreach (cms.businesslogic.web.Document d in c)
                 {
-                    d.XmlGenerate(xd);
+                    d.RePublish();
                     Response.Write("<li>Creating xml for " + d.Text + "</li>");
                     Response.Flush();
                 }

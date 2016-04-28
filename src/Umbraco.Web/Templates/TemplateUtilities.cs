@@ -15,7 +15,7 @@ namespace Umbraco.Web.Templates
 	/// </summary>
 	public static class TemplateUtilities
 	{
-        internal static string ParseInternalLinks(string text, bool preview)
+        internal static void ParseInternalLinks(ref string text, bool preview)
 	    {
             // save and set for url provider
             var inPreviewMode = UmbracoContext.Current.InPreviewMode;
@@ -23,15 +23,13 @@ namespace Umbraco.Web.Templates
 
             try
             {
-                text = ParseInternalLinks(text);
+                ParseInternalLinks(ref text);
             }
             finally
             {
                 // restore
                 UmbracoContext.Current.InPreviewMode = inPreviewMode;
             }
-
-            return text;
 	    }
 
 	    /// <summary>
@@ -39,13 +37,10 @@ namespace Umbraco.Web.Templates
 	    /// </summary>
 	    /// <param name="text"></param>
 	    /// <returns></returns>
-	    public static string ParseInternalLinks(string text)
+	    public static void ParseInternalLinks(ref string text)
 		{
 			//don't attempt to proceed without a context as we cannot lookup urls without one
-			if (UmbracoContext.Current == null || UmbracoContext.Current.RoutingContext == null)
-			{
-				return text;
-			}
+			if (UmbracoContext.Current == null || UmbracoContext.Current.RoutingContext == null) return;
 
 			var urlProvider = UmbracoContext.Current.UrlProvider;
 
@@ -58,8 +53,6 @@ namespace Umbraco.Web.Templates
 					var newLink = urlProvider.GetUrl(int.Parse(id));
 					text = text.Replace(tag.Value, "href=\"" + newLink);
 				}
-
-            return text;
 		}
 
 		// static compiled regex for faster performance

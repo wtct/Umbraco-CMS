@@ -923,16 +923,35 @@ namespace umbraco
             return LoadContentFromDatabase();
         }
 
+        public delegate void DiskCacheValidationEventHandler(DiskCacheValidationEventArgs e);
+
+        public static event DiskCacheValidationEventHandler DiskCacheValidated;
+
+        protected virtual void OnDiskCacheValidated(DiskCacheValidationEventArgs args)
+        {
+            if (DiskCacheValidated != null)
+                DiskCacheValidated(args);
+        }
+
         private bool IsValidDiskCachePresent()
         {
-            if (File.Exists(UmbracoXmlDiskCacheFileName))
+            var diskCacheFileInfo = new FileInfo(UmbracoXmlDiskCacheFileName);
+
+            var args = new DiskCacheValidationEventArgs(diskCacheFileInfo)
+            {
+                IsValid = false
+            };
+
+            if (diskCacheFileInfo.Exists)
             {
                 // Only return true if we don't have a zero-byte file
-                var f = new FileInfo(UmbracoXmlDiskCacheFileName);
-                if (f.Length > 0)
-                    return true;
+                if (diskCacheFileInfo.Length > 0)
+                    args.IsValid = true;
             }
-            return false;
+
+            OnDiskCacheValidated(args);
+
+            return args.IsValid;
         }
 
         /// <summary>
@@ -1252,5 +1271,25 @@ order by umbracoNode.level, umbracoNode.sortOrder";
         }
 
         #endregion
+    }
+
+    public class DiskCacheValidationEventArgs : EventArgs
+    {
+        private FileInfo _diskCacheFileInfo;
+
+        internal DiskCacheValidationEventArgs(FileInfo fileInfo)
+        {
+            _diskCacheFileInfo = fileInfo;
+        }
+
+        public FileInfo DiskCacheFileInfo
+        {
+            get
+            {
+                return _diskCacheFileInfo;
+            }
+        }
+
+        public bool IsValid { get; set; }
     }
 }
