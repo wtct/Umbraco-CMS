@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using umbraco.DataLayer;
 using umbraco.BusinessLogic;
-using umbraco.interfaces;
-using umbraco.cms.businesslogic.media;
 using umbraco.cms.businesslogic.web;
-using umbraco.cms.helpers;
+using umbraco.DataLayer;
+using umbraco.interfaces;
+using Umbraco.Core;
 
 namespace umbraco.cms.businesslogic.Tags
 {
@@ -200,7 +198,7 @@ namespace umbraco.cms.businesslogic.Tags
 	                                        INSERT INTO cmsTags(Tag, [Group], FormatedForUrl) VALUES (@Tag, @group, @FormatedForUrl + '_' + CAST(IDENT_CURRENT('cmsTags') AS VARCHAR(10)))",                                                                                                                                                                                           
                 SqlHelper.CreateParameter("@tag", tag.Trim()),
                 SqlHelper.CreateParameter("@group", group),
-                SqlHelper.CreateParameter("@formatedForUrl", url.FormatUrl(tag.Trim().ToLower())));
+                SqlHelper.CreateParameter("@formatedForUrl", tag.ToLower().ToUrlSegment()));
 
             return GetTagId(tag, group);
         }
