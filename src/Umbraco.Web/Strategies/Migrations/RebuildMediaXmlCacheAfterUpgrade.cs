@@ -25,7 +25,7 @@ namespace Umbraco.Web.Strategies.Migrations
 
         void MigrationRunner_Migrated(MigrationRunner sender, Core.Events.MigrationEventArgs e)
         {
-            var target70 = new Version(7, 0, 0);
+            var target70 = new Version(4, 7, 0);
 
             if (e.ConfiguredVersion <= target70)
             {
