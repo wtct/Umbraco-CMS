@@ -1269,7 +1269,7 @@ namespace umbraco
                     if (extensionType == null)
                         throw new Exception(
                             String.Format(
-                                "Could not load type {0} ({1}) for XSLT extension {1}. Please check config/xsltExtensions.config.",
+                                "Could not load type {0} ({1}) for XSLT extension {2}. Please check config/xsltExtensions.config.",
                                 xsltEx.Attributes["type"].Value, extensionFile, xsltEx.Attributes["alias"].Value));
 
                     // create an instance and add it to the extensions list
