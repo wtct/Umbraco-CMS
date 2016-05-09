@@ -62,7 +62,7 @@
     </script>
     <script type="text/javascript">
         function OpenDedicatedMediaFolder(id) {
-            parent.openMedia(id);
+            UmbClientMgr.contentFrameAndSection('media', 'editMedia.aspx?id=' + id);
         }
         $(document).ready(function () {
             $('div.sl').append('<img class="editorIcon gtdmf" title="Go to dedicated media folder" src="/umbraco/images/editor/folder_go.png" onmousedown="this.className=\'editorIconDown\'" onmouseup="this.className=\'editorIcon\'" onmouseout="this.className=\'editorIcon\'" onmouseover="this.className=\'editorIconOver\'" />"');
@@ -73,11 +73,8 @@
                     cache: false,
                     data: { id: umbPageId },
                     success: function (mediaId) {
-                        if (mediaId) {
-                            parent.appClick('media');
-                            var openMediaDelay = function () { OpenDedicatedMediaFolder(mediaId); };
-                            setTimeout(openMediaDelay, 400);
-                        }
+                        if (mediaId)
+                            OpenDedicatedMediaFolder(mediaId);
                     },
                     error: function () {
                         alert("A unexpected error occured. Please train again.");
