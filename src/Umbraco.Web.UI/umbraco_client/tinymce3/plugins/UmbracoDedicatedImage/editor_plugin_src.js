@@ -28,7 +28,7 @@
             });
 
             // Register buttons
-            ed.addButton('image', {
+            ed.addButton('UmbracoDedicatedImage', {
                 title: 'Insert/edit dedicated image',
                 cmd: 'mceUmbDedicatedImage',
                 image: tinyMCE.activeEditor.getParam("umbraco_path") + "/images/editor/dedicated_image.gif"
@@ -48,6 +48,6 @@
     });
 
     // Register plugin
-    tinymce.PluginManager.add('umbracodedicatedimg', tinymce.plugins.UmbracoDedicatedImage);
+    tinymce.PluginManager.add('UmbracoDedicatedImage', tinymce.plugins.UmbracoDedicatedImagePlugin);
     
 })();
