@@ -393,7 +393,7 @@ namespace umbraco.presentation
 				pingTimer = new Timer(new TimerCallback(keepAliveService.PingUmbraco), HttpApp.Context, 60000, 300000);
 
 				// Start publishingservice
-                if (!GlobalSettings.DisablePublishingService)
+                if (!GlobalSettings.DisableScheduledPublishing)
     				publishingTimer = new Timer(new TimerCallback(publishingService.CheckPublishing), HttpApp.Context, 30000, 60000);
 
 				//Find Applications and event handlers and hook-up the events

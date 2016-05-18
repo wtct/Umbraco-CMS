@@ -431,22 +431,9 @@ namespace umbraco
         /// Gets if publishing service is disabled
         /// </summary>
         /// <value>Returns true if publishing service is disabled</value>
-        public static bool DisablePublishingService
+        public static bool DisableScheduledPublishing
         {
-            get
-            {
-                string value = ConfigurationManager.AppSettings["umbracoDisablePublishingService"];
-                bool result;
-                if (!string.IsNullOrEmpty(value) && bool.TryParse(value, out result))
-                    return result;
-
-                return false;
-            }
-            set
-            {
-                if (DisablePublishingService != value)
-                    SaveSetting("umbracoDisablePublishingService", value ? "true" : "false");
-            }
+            get { return Umbraco.Core.Configuration.GlobalSettings.DisableScheduledPublishing; }
         }
     }
 
