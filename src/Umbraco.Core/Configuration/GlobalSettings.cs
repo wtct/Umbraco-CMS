@@ -813,6 +813,25 @@ namespace Umbraco.Core.Configuration
         }
 
         /// <summary>
+        /// Gets if publishing service is disabled
+        /// </summary>
+        /// <value>Returns true if publishing service is disabled</value>
+        public static bool DisableScheduledPublishing
+        {
+            get
+            {
+                try
+                {
+                    return bool.Parse(ConfigurationManager.AppSettings["umbracoDisableScheduledPublishing"]);
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
         /// Structure that checks in logarithmic time
         /// if a given string starts with one of the added keys.
         /// </summary>
