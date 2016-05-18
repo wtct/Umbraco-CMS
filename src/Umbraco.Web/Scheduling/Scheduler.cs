@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Web;
 using Umbraco.Core;
+using Umbraco.Core.Configuration;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Sync;
 
@@ -119,7 +120,8 @@ namespace Umbraco.Web.Scheduling
                         // then we will process the scheduling
                     
                         //do the scheduled publishing
-                        _publishingRunner.Add(new ScheduledPublishing(appContext));
+                        if (!GlobalSettings.DisableScheduledPublishing)
+                            _publishingRunner.Add(new ScheduledPublishing(appContext));
 
                         //do the scheduled tasks
                         _tasksRunner.Add(new ScheduledTasks(appContext));
