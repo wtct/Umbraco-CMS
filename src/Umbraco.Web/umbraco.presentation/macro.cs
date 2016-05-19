@@ -1847,7 +1847,7 @@ namespace umbraco
                 // Create a new 'HttpWebRequest' Object to the mentioned URL.
                 string retVal = string.Empty;
                 string protocol = GlobalSettings.UseSSL ? "https" : "http";
-                string url = string.Format("{0}://{1}{2}/macroResultWrapper.aspx?{4}", protocol,
+                string url = string.Format("{0}://{1}{2}/macroResultWrapper.aspx?{3}", protocol,
                                            HttpContext.Current.Request.ServerVariables["SERVER_NAME"],
                                            IOHelper.ResolveUrl(SystemDirectories.Umbraco), querystring);
 
