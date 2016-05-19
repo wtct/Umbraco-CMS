@@ -27,7 +27,7 @@
 	<umb:JsInclude ID="JsInclude7" runat="server" FilePath="tinymce3/utils/validate.js" PathNameAlias="UmbracoClient" Priority="103" />
 
 	<umb:JsInclude ID="JsInclude2" runat="server" FilePath="tinymce3/utils/editable_selects.js" PathNameAlias="UmbracoClient" Priority="110" />
-	<umb:JsInclude ID="JsInclude1" runat="server" FilePath="tinymce3/plugins/umbracodedicatedimg/js/image.js" PathNameAlias="UmbracoClient" Priority="111" />
+	<umb:JsInclude ID="JsInclude1" runat="server" FilePath="tinymce3/plugins/UmbracoDedicatedImage/js/image.js" PathNameAlias="UmbracoClient" Priority="111" />
 
     
     
