@@ -198,7 +198,7 @@ namespace umbraco.cms.businesslogic.Tags
 	                                        INSERT INTO cmsTags(Tag, [Group], FormatedForUrl) VALUES (@Tag, @group, @FormatedForUrl + '_' + CAST(IDENT_CURRENT('cmsTags') AS VARCHAR(10)))",                                                                                                                                                                                           
                 SqlHelper.CreateParameter("@tag", tag.Trim()),
                 SqlHelper.CreateParameter("@group", group),
-                SqlHelper.CreateParameter("@formatedForUrl", tag.ToLower().ToUrlSegment()));
+                SqlHelper.CreateParameter("@formatedForUrl", tag.ToUrlSegment()));
 
             return GetTagId(tag, group);
         }
