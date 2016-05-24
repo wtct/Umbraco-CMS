@@ -216,7 +216,7 @@ namespace Umbraco.Web.Routing
                 {
                     // exclude the current one (avoid producing the absolute equivalent of what GetUrl returns)
                     var hintWithSlash = current.EndPathWithSlash();
-                    var hinted = domainAndUris.FirstOrDefault(d => d.Uri.EndPathWithSlash().IsBaseOf(hintWithSlash));
+                    var hinted = domainAndUris.FirstOrDefault(d => d.Uri.EndPathWithSlash().IsBaseOf(hintWithSlash) || d.Uri.Host == current.Host);
                     if (hinted != null)
                         ret = ret.Where(d => d != hinted);
 
