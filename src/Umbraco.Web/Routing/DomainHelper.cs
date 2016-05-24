@@ -156,7 +156,7 @@ namespace Umbraco.Web.Routing
                 // ie current is www.example.com/foo/bar, look for domain www.example.com
                 var currentWithSlash = current.EndPathWithSlash();
                 domainAndUri = domainsAndUris
-                    .FirstOrDefault(d => d.Uri.EndPathWithSlash().IsBaseOf(currentWithSlash));
+                    .FirstOrDefault(d => d.Uri.EndPathWithSlash().IsBaseOf(currentWithSlash) || d.Uri.Host == current.Host);
                 if (domainAndUri != null) return domainAndUri;
 
                 // if none matches, then try to run the filter to pick a domain
