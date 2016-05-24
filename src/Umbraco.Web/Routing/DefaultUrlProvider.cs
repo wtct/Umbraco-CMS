@@ -141,7 +141,12 @@ namespace Umbraco.Web.Routing
             else // a domain was found
             {
                 if (mode == UrlProviderMode.Auto)
-                    mode = UrlProviderMode.Relative;
+                {
+                    if (current != null && domainUri.Uri.GetLeftPart(UriPartial.Authority) == current.GetLeftPart(UriPartial.Authority))    
+                        mode = UrlProviderMode.Relative;
+                    else
+                        mode = UrlProviderMode.Absolute;
+                }
 
                 switch (mode)
                 {
