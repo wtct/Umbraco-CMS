@@ -36,10 +36,10 @@ namespace umbraco
 		public loadDedicatedMedia(string application)
 			: base(application)
 		{
-            int umbPageId = GetUmbPageIdByReferer();
+            int umbPageId = GetUmbPageIdByUrlReferrer();
 
             if (umbPageId != -1)
-                _StartNodeID = GetDedicatedMediaFolderByNodeId(umbPageId);
+                _StartNodeID = GetDedicatedMediaFolderIdByContentNodeId(umbPageId);
             else
                 _StartNodeID = CurrentUser.StartMediaId;
 		}		
@@ -86,59 +86,61 @@ namespace umbraco
             }
 		}
 
-        private int GetUmbPageIdByReferer()
+        private int GetUmbPageIdByUrlReferrer()
         {
-            if (HttpContext.Current.Request.UrlReferrer != null)
+            Uri urlReferrer = HttpContext.Current.Request.UrlReferrer;
+
+            if (urlReferrer != null)
             {
-                string url = HttpContext.Current.Request.UrlReferrer.AbsoluteUri;
-                Regex regEx = new Regex("umbPageId=(\\d{1,10})", RegexOptions.IgnoreCase);
-
-                Match match = regEx.Match(url);
-
-                int umbPageId = -1;
-
-                if (match.Success)
+                if (!string.IsNullOrEmpty(urlReferrer.Query))
                 {
-                    string sUmbPageId = match.Groups[1].Value;
-                    if (Int32.TryParse(sUmbPageId, out umbPageId))
-                        return umbPageId;
+                    var queryString = HttpUtility.ParseQueryString(urlReferrer.Query);
+
+                    if (queryString.ContainsKey("umbPageId"))
+                    {
+                        int umbPageId = -1;
+
+                        string sUmbPageId = queryString["umbPageId"];
+                        if (Int32.TryParse(sUmbPageId, out umbPageId))
+                            return umbPageId;
+                    }
                 }
             }
 
             return -1;
         }
 
-        private int GetDedicatedMediaFolderByNodeId(int nodeId)
+        private int GetDedicatedMediaFolderIdByContentNodeId(int contentNodeId)
         {
-            CMSNode node = new CMSNode(nodeId);
+            IContent contentNode = ApplicationContext.Current.Services.ContentService.GetById(contentNodeId);
 
             List<string> NodeNames = new List<string>();
 
-            NodeNames.Add(node.Text);
+            NodeNames.Add(contentNode.Name);
 
-            while (node.Level > 1)
+            while (contentNode.Level > 1)
             {
-                node = node.Parent;
-                NodeNames.Add(node.Text);
+                contentNode = ApplicationContext.Current.Services.ContentService.GetById(contentNode.ParentId);
+                NodeNames.Add(contentNode.Name);
             }
 
-            IMedia MediaRoot = ApplicationContext.Current.Services.MediaService.GetRootMedia().Where(m => string.Equals(m.Name, NodeNames[NodeNames.Count - 1], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            IMedia mediaRootNode = ApplicationContext.Current.Services.MediaService.GetRootMedia().Where(m => string.Equals(m.Name, NodeNames[NodeNames.Count - 1], StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
 
-            if (MediaRoot != null)
+            if (mediaRootNode != null)
             {
-                IMedia MediaCurrent = MediaRoot;
+                IMedia currentMediaNode = mediaRootNode;
 
                 foreach (string nodeName in NodeNames.Reverse<string>().Skip(1))
                 {
-                    IMedia Child = MediaCurrent.Children().Where(m => string.Equals(m.Name, nodeName, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                    IMedia childMediaNode = currentMediaNode.Children().Where(m => string.Equals(m.Name, nodeName, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
 
-                    if (Child == null)
+                    if (childMediaNode == null)
                         return -1;
 
-                    MediaCurrent = Child;
+                    currentMediaNode = childMediaNode;
                 }
 
-                return MediaCurrent.Id;
+                return currentMediaNode.Id;
             }
 
             return -1;
