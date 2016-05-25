@@ -86,32 +86,6 @@ namespace umbraco
             }
 		}
 
-		/// <summary>
-		/// Adds the recycling bin node. This method should only actually add the recycle bin node when the tree is initially created and if the user
-		/// actually has access to the root node.
-		/// </summary>
-		/// <returns></returns>
-		protected XmlTreeNode CreateRecycleBin()
-		{
-			if (m_id == -1 && !this.IsDialog)
-			{
-				//create a new content recycle bin tree, initialized with it's startnodeid
-				MediaRecycleBin bin = new MediaRecycleBin(this.m_app);
-				bin.ShowContextMenu = this.ShowContextMenu;
-				bin.id = bin.StartNodeID;
-				return bin.RootNode;
-			}
-			return null;
-		}
-
-		public override void Render(ref XmlTree tree)
-		{
-			base.Render(ref tree);
-			XmlTreeNode recycleBin = CreateRecycleBin();
-			if (recycleBin != null)
-				tree.Add(recycleBin);
-		}
-
         private int GetUmbPageIdByReferer()
         {
             if (HttpContext.Current.Request.UrlReferrer != null)
