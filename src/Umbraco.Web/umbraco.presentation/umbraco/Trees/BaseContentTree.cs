@@ -70,6 +70,8 @@ function openContent(id) {
         /// <param name="Tree">The tree.</param>
         public override void Render(ref XmlTree Tree)
         {
+            var args = new TreeEventArgs(Tree);
+
             if (UseOptimizedRendering == false)
             {
                 //We cannot run optimized mode since there are subscribers to events/methods that require document instances
@@ -78,7 +80,6 @@ function openContent(id) {
                 //get documents to render
                 var docs = Document.GetChildrenForTree(m_id);
 
-                var args = new TreeEventArgs(Tree);
                 OnBeforeTreeRender(docs, args);
 
                 foreach (var dd in docs)
@@ -110,8 +111,7 @@ function openContent(id) {
 
                 var entities = Services.EntityService.GetChildren(m_id, UmbracoObjectTypes.Document).ToArray();
 
-                var args = new TreeEventArgs(Tree);
-                OnBeforeTreeRenderOptimizedMode(entities, args);
+                OnBeforeTreeRender(entities, args);
 
                 foreach (var entity in entities)
                 {
@@ -134,8 +134,7 @@ function openContent(id) {
                         }
                     }
                 }
-
-                OnAfterTreeRenderOptimizedMode(entities, args);
+                OnAfterTreeRender(entities, args);
             }
         }
 
@@ -497,11 +496,6 @@ function openContent(id) {
         {
             get
             {
-                if (HasEntityBasedEventSubscribers)
-                {
-                    return false;
-                }
-
                 //now we need to check if the current tree type has OnRenderNode overridden with a custom implementation
                 //Strangely - this even works in med trust!
                 var method = this.GetType().GetMethod("OnRenderNode", BindingFlags.Instance | BindingFlags.NonPublic, null, new[] { typeof(XmlTreeNode).MakeByRefType(), typeof(Document) }, null);
