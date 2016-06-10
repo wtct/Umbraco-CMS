@@ -492,9 +492,6 @@ namespace umbraco.cms.presentation.Trees
         public static event EventHandler<TreeEventArgs> BeforeTreeRender;
         public static event EventHandler<TreeEventArgs> AfterTreeRender;
 
-        public static event EventHandler<TreeEventArgs> BeforeTreeRenderOptimizedMode;
-        public static event EventHandler<TreeEventArgs> AfterTreeRenderOptimizedMode;
-
         /// <summary>
         /// Raises the <see cref="E:BeforeNodeRender"/> event.
         /// </summary>
@@ -528,18 +525,6 @@ namespace umbraco.cms.presentation.Trees
         {
             if (AfterTreeRender != null)
                 AfterTreeRender(sender, e);
-        }
-
-        protected virtual void OnBeforeTreeRenderOptimizedMode(object sender, TreeEventArgs e)
-        {
-            if (BeforeTreeRenderOptimizedMode != null)
-                BeforeTreeRenderOptimizedMode(sender, e);
-        }
-
-        protected virtual void OnAfterTreeRenderOptimizedMode(object sender, TreeEventArgs e)
-        {
-            if (AfterTreeRenderOptimizedMode != null)
-                AfterTreeRenderOptimizedMode(sender, e);
         }
 
         [Obsolete("Do not use this method to raise events, it is no longer used and will cause very high performance spikes!")]

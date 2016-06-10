@@ -109,10 +109,6 @@ function openContent(id) {
                 // to call so that is fine.
 
                 var entities = Services.EntityService.GetChildren(m_id, UmbracoObjectTypes.Document).ToArray();
-
-                var args = new TreeEventArgs(Tree);
-                OnBeforeTreeRenderOptimizedMode(entities, args);
-
                 foreach (var entity in entities)
                 {
                     var e = entity as UmbracoEntity;
@@ -134,8 +130,6 @@ function openContent(id) {
                         }
                     }
                 }
-
-                OnAfterTreeRenderOptimizedMode(entities, args);
             }
         }
 
