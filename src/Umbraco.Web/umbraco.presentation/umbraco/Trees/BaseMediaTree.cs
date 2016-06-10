@@ -60,54 +60,26 @@ function openMedia(id) {
 
         public override void Render(ref XmlTree tree)
         {
+            var entities = Services.EntityService.GetChildren(m_id, UmbracoObjectTypes.Media).ToArray();
 
-            if (UseOptimizedRendering == false)
-            {
-                //We cannot run optimized mode since there are subscribers to events/methods that require document instances
-                // so we'll render the original way by looking up the docs.
-
-                var docs = new Media(m_id).Children;
-
-                var args = new TreeEventArgs(tree);
-                OnBeforeTreeRender(docs, args);
-
-                foreach (var dd in docs)
-                {
-                    var e = dd;
-                    var xNode = PerformNodeRender(e.Id, e.Text, e.HasChildren, e.ContentType.IconUrl, e.ContentType.Alias, () => GetLinkValue(e, e.Id.ToString(CultureInfo.InvariantCulture)));
-
-
-                    OnBeforeNodeRender(ref tree, ref xNode, EventArgs.Empty);
-                    if (xNode != null)
-                    {
-                        tree.Add(xNode);
-                        OnAfterNodeRender(ref tree, ref xNode, EventArgs.Empty);
-                    }
-                }
-
-                OnAfterTreeRender(docs, args);
-            }
-            else
-            {
-                //We ARE running in optmized mode, this means we will NOT be raising the BeforeTreeRender or AfterTreeRender 
-                // events  - we've already detected that there are not subscribers or implementations
-                // to call so that is fine.
-
-                var entities = Services.EntityService.GetChildren(m_id, UmbracoObjectTypes.Media).ToArray();
+            var args = new TreeEventArgs(tree);
+            OnBeforeTreeRender(entities, args);
                 
-                foreach (UmbracoEntity entity in entities)
+            foreach (UmbracoEntity entity in entities)
+            {
+                var e = entity;
+                var xNode = PerformNodeRender(e.Id, entity.Name, e.HasChildren, e.ContentTypeIcon, e.ContentTypeAlias, () => GetLinkValue(e));
+                   
+                OnBeforeNodeRender(ref tree, ref xNode, EventArgs.Empty);
+
+                if (xNode != null)
                 {
-                    var e = entity;
-                    var xNode = PerformNodeRender(e.Id, entity.Name, e.HasChildren, e.ContentTypeIcon, e.ContentTypeAlias, () => GetLinkValue(e));
-                    
-                    OnBeforeNodeRender(ref tree, ref xNode, EventArgs.Empty);
-                    if (xNode != null)
-                    {
-                        tree.Add(xNode);
-                        OnAfterNodeRender(ref tree, ref xNode, EventArgs.Empty);
-                    }
+                    tree.Add(xNode);
+                    OnAfterNodeRender(ref tree, ref xNode, EventArgs.Empty);
                 }
-            }            
+            }
+            
+            OnAfterTreeRender(entities, args);
         }
 
         private XmlTreeNode PerformNodeRender(int nodeId, string nodeName, bool hasChildren, string icon, string contentTypeAlias, Func<string> getLinkValue)
@@ -214,27 +186,5 @@ function openMedia(id) {
 		/// the GUID of a custom data type. The order of property types on the media item definition will determine the output value.
 		/// </summary>
 		public static List<Guid> LinkableMediaDataTypes { get; protected set; }
-
-        /// <summary>
-        /// Returns true if we can use the EntityService to render the tree or revert to the original way 
-        /// using normal documents
-        /// </summary>
-        /// <remarks>
-        /// We determine this by:
-        /// * If there are any subscribers to the events: BeforeTreeRender or AfterTreeRender - then we cannot run optimized
-        /// </remarks>
-        internal bool UseOptimizedRendering
-        {
-            get
-            {
-                if (HasEntityBasedEventSubscribers)
-                {
-                    return false;
-                }
-
-                return true;
-            }
-        }
-
 	}
 }
