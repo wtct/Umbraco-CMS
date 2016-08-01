@@ -698,6 +698,20 @@ namespace Umbraco.Core.Services
             }
         }
 
+        public bool RePublish(int contentId)
+        {
+            try
+            {
+                RebuildXml(contentId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Error<ContentService>("An error occurred executing RePublish", ex);
+                return false;
+            }
+        }
+
         /// <summary>
         /// This will rebuild the xml structures for content in the database. 
         /// </summary>
@@ -1649,7 +1663,7 @@ namespace Umbraco.Core.Services
             }
         }
 
-        public void RebuildXml(int contentId)
+        private void RebuildXml(int contentId)
         {
             using (new WriteLock(Locker))
             {
