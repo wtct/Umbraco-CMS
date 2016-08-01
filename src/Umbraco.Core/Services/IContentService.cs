@@ -262,6 +262,13 @@ namespace Umbraco.Core.Services
         bool RePublishAll(int userId = 0);
 
         /// <summary>
+        /// Re-Publishes specified Content
+        /// </summary>
+        /// <param name="contentId">Id of published content to re-publish</param>
+        /// <returns>True if publishing succeeded, otherwise False</returns>
+        bool RePublish(int contentId);
+
+        /// <summary>
         /// Publishes a single <see cref="IContent"/> object
         /// </summary>
         /// <param name="content">The <see cref="IContent"/> to publish</param>
