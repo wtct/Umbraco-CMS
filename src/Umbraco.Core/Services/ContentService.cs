@@ -361,6 +361,17 @@ namespace Umbraco.Core.Services
             }
         }
 
+        internal IContent GetPublishedContentById(int id)
+        {
+            using (var repository = _repositoryFactory.CreateContentRepository(_uowProvider.GetUnitOfWork()))
+            {
+                var query = Query<IContent>.Builder.Where(x => x.Id == id);
+                var contents = repository.GetByPublishedVersion(query);
+
+                return contents.SingleOrDefault();
+            }
+        }
+
         internal IEnumerable<IContent> GetPublishedContentOfContentType(int id)
         {
             using (var repository = _repositoryFactory.CreateContentRepository(_uowProvider.GetUnitOfWork()))
@@ -1635,6 +1646,23 @@ namespace Umbraco.Core.Services
                 }
 
                 Audit.Add(AuditTypes.Publish, "RebuildXmlStructures completed, the xml has been regenerated in the database", 0, -1);
+            }
+        }
+
+        public void RebuildXml(int contentId)
+        {
+            using (new WriteLock(Locker))
+            {
+                var uow = _uowProvider.GetUnitOfWork();
+
+                var content = GetPublishedContentById(contentId);
+
+                using (var repository = _repositoryFactory.CreateContentRepository(uow))
+                {
+                    repository.AddOrUpdateContentXml(content, c => _entitySerializer.Serialize(this, _dataTypeService, c));
+                }
+
+                Audit.Add(AuditTypes.Publish, "RebuildXmlStructure completed, the xml has been regenerated in the database", 0, contentId);
             }
         }
 
