@@ -1667,13 +1667,18 @@ namespace Umbraco.Core.Services
         {
             using (new WriteLock(Locker))
             {
-                var uow = _uowProvider.GetUnitOfWork();
-
                 var content = GetPublishedContentById(contentId);
 
-                using (var repository = _repositoryFactory.CreateContentRepository(uow))
+                if (content != null)
                 {
-                    repository.AddOrUpdateContentXml(content, c => _entitySerializer.Serialize(this, _dataTypeService, c));
+                    var uow = _uowProvider.GetUnitOfWork();
+
+                    using (var repository = _repositoryFactory.CreateContentRepository(uow))
+                    {
+                        repository.AddOrUpdateContentXml(content, c => _entitySerializer.Serialize(this, _dataTypeService, c));
+
+                        uow.Commit();
+                    }
                 }
 
                 Audit.Add(AuditTypes.Publish, "RebuildXmlStructure completed, the xml has been regenerated in the database", 0, contentId);
