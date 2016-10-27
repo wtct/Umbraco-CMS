@@ -65,7 +65,7 @@
             UmbClientMgr.contentFrameAndSection('media', 'editMedia.aspx?id=' + id);
         }
         $(document).ready(function () {
-            $('div.sl').append('<img class="editorIcon gtdmf" title="Go to dedicated media folder" src="/umbraco/images/editor/folder_go.png" onmousedown="this.className=\'editorIconDown\'" onmouseup="this.className=\'editorIcon\'" onmouseout="this.className=\'editorIcon\'" onmouseover="this.className=\'editorIconOver\'" />"');
+            $('div.sl').append('<img class="editorIcon gtdmf" title="Go to dedicated media folder" src="/umbraco/images/editor/folder_go.png" onmousedown="this.className=\'editorIconDown\'" onmouseup="this.className=\'editorIcon\'" onmouseout="this.className=\'editorIcon\'" onmouseover="this.className=\'editorIconOver\'" />');
             $('img.gtdmf').parent().width(112);
             $('img.gtdmf').click(function () {
                 $.ajax({
