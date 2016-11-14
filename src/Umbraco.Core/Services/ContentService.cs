@@ -1679,9 +1679,9 @@ namespace Umbraco.Core.Services
 
                         uow.Commit();
                     }
-                }
 
-                Audit.Add(AuditTypes.Publish, "RebuildXmlStructure completed, the xml has been regenerated in the database", 0, contentId);
+                    Audit.Add(AuditTypes.Publish, "RebuildXmlStructure completed, the xml has been regenerated in the database", 0, contentId);
+                }                
             }
         }
 
