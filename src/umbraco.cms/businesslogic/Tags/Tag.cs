@@ -192,10 +192,10 @@ namespace umbraco.cms.businesslogic.Tags
 
         public static int AddTag(string tag, string group)
         {
-            SqlHelper.ExecuteNonQuery(@"IF NOT EXISTS(SELECT Id FROM cmsTags WHERE FormatedForUrl = @formatedForUrl)
+            SqlHelper.ExecuteNonQuery(@"IF NOT EXISTS(SELECT Id FROM cmsTags WHERE [Group] = @Group AND FormatedForUrl = @formatedForUrl)
 	                                        INSERT INTO cmsTags(Tag, [Group], FormatedForUrl) VALUES (@Tag, @Group, @FormatedForUrl)
                                         ELSE
-	                                        INSERT INTO cmsTags(Tag, [Group], FormatedForUrl) VALUES (@Tag, @group, @FormatedForUrl + '_' + CAST(IDENT_CURRENT('cmsTags') AS VARCHAR(10)))",                                                                                                                                                                                           
+	                                        INSERT INTO cmsTags(Tag, [Group], FormatedForUrl) VALUES (@Tag, @Group, @FormatedForUrl + '_' + CAST(IDENT_CURRENT('cmsTags') AS VARCHAR(10)))",                                                                                                                                                                                           
                 SqlHelper.CreateParameter("@tag", tag.Trim()),
                 SqlHelper.CreateParameter("@group", group),
                 SqlHelper.CreateParameter("@formatedForUrl", tag.ToUrlSegment()));
