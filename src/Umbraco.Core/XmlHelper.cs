@@ -557,7 +557,7 @@ namespace Umbraco.Core
 		public static Dictionary<string, string> GetAttributesFromElement(string tag)
 		{
 			var m =
-				Regex.Matches(tag, "(?<attributeName>\\S*)=\"(?<attributeValue>[^\"]*)\"",
+				Regex.Matches(tag, "(?<attributeName>[^\\s=]+)=\"(?<attributeValue>[^\"]*)\"",
 							  RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace);
 			// fix for issue 14862: return lowercase attributes for case insensitive matching
 			var d = m.Cast<Match>().ToDictionary(attributeSet => attributeSet.Groups["attributeName"].Value.ToString().ToLower(), attributeSet => attributeSet.Groups["attributeValue"].Value.ToString());
