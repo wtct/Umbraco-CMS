@@ -406,6 +406,33 @@ namespace umbraco
         {
         	return Umbraco.Core.Configuration.GlobalSettings.IsReservedPathOrUrl(url);
         }
+
+        /// <summary>
+        /// Gets UseMemcached configuration
+        /// </summary>
+        /// <value>Returns true or false</value>
+        public static bool UseMemcached
+        {
+            get { return Umbraco.Core.Configuration.GlobalSettings.UseMemcached; }
+        }
+
+        /// <summary>
+        /// Gets the Memcached Namespace for current CMS instance
+        /// </summary>
+        /// <value>Memcached namespace</value>
+        public static string MemcachedNamespace
+        {
+            get { return Umbraco.Core.Configuration.GlobalSettings.MemcachedNamespace; }
+        }
+
+        /// <summary>
+        /// Gets if refreshing macros by umbRefreshMacro QueryString variable is allowed
+        /// </summary>
+        /// <value>Returns true if refreshing is allowed/value>
+        public static bool QueryStringMacroRefreshing
+        {
+            get { return Umbraco.Core.Configuration.GlobalSettings.QueryStringMacroRefreshing; }
+        }
     }
 
 
