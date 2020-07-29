@@ -856,8 +856,51 @@ namespace Umbraco.Core.Configuration
             return _reservedList.Any(x => pathPart.InvariantStartsWith(x));
         }
 
-      
+        /// <summary>
+        /// Gets UseMemcached configuration
+        /// </summary>
+        /// <value>Returns true or false</value>
+        public static bool UseMemcached
+        {
+            get
+            {
+                string value = ConfigurationManager.AppSettings["umbracoUseMemcached"];
+                bool result;
+                if (!string.IsNullOrEmpty(value) && bool.TryParse(value, out result))
+                    return result;
 
+                return false;
+            }
+            set
+            {
+                if (UseMemcached != value)
+                    SaveSetting("umbracoUseMemcached", value ? "true" : "false");
+            }
+        }
+
+        /// <summary>
+        /// Gets the Memcached Namespace for current CMS instance
+        /// </summary>
+        /// <value>Memcached namespace</value>
+        public static string MemcachedNamespace
+        {
+            get
+            {
+                try
+                {
+                    return ConfigurationManager.AppSettings["umbracoMemcachedNamespace"];
+                }
+                catch
+                {
+                    return String.Empty;
+                }
+            }
+            set
+            {
+                if (MemcachedNamespace != value)
+                    SaveSetting("umbracoMemcachedNamespace", value);
+            }
+        }
     }
 
 
