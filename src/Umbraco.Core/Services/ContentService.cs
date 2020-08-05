@@ -1062,6 +1062,25 @@ namespace Umbraco.Core.Services
         }
 
         /// <summary>
+        /// This will rebuild the xml structure for specified content in the database.
+        /// </summary>
+        /// <param name="content">The <see cref="IContent"/> to re-publish</param>
+        /// <param name="userId">This is not used for anything</param>
+        /// <returns>True if re-publishing succeeded, otherwise False</returns>
+        public bool RePublish(IContent content, int userId = 0)
+        {
+            try
+            {
+                return RebuildXmlStructure(content);
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Error<ContentService>("An error occurred executing RePublish", ex);
+                return false;
+            }
+        }
+
+        /// <summary>
         /// This will rebuild the xml structures for content in the database.
         /// </summary>
         /// <param name="contentTypeIds">
@@ -2272,6 +2291,40 @@ namespace Umbraco.Core.Services
                 Audit(uow, AuditType.Publish, "ContentService.RebuildXmlStructures completed, the xml has been regenerated in the database", 0, Constants.System.Root);
                 uow.Commit();
             }
+        }
+
+        /// <summary>
+        /// Rebuilds xml content in the cmsContentXml table for specified documents
+        /// </summary>
+        /// <param name="content">The <see cref="IContent"/> to re-publish
+        /// Only rebuild the xml structure for the specified content passed in
+        /// </param>
+        /// <returns>Returns True if content has published version and xml structure is regenerated, otherwise False</returns>
+        public bool RebuildXmlStructure(IContent content)
+        {
+            using (new WriteLock(Locker))
+            {
+                using (var uow = UowProvider.GetUnitOfWork())
+                {
+                    var publishedVersion = GetPublishedVersion(content);
+
+                    if (publishedVersion != null)
+                    {
+                        var repository = RepositoryFactory.CreateContentRepository(uow);
+
+                        repository.AddOrUpdateContentXml(publishedVersion, c => _entitySerializer.Serialize(this, _dataTypeService, _userService, c));
+
+                        Audit(uow, AuditType.Publish, "RebuildXmlStructure completed, the xml has been regenerated in the database", 0, content.Id);
+                        uow.Commit();
+
+                        return true;
+                    }
+                    else
+                        Audit(uow, AuditType.Publish, "RebuildXmlStructure aborted, the content doesn't have published version", 0, content.Id);
+                }
+            }
+
+            return false;
         }
 
         #region Internal Methods
