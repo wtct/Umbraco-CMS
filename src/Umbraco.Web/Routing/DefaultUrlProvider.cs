@@ -57,13 +57,8 @@ namespace Umbraco.Web.Routing
 
         internal string GetUrlFromRoute(string route, UmbracoContext umbracoContext, int id, Uri current, UrlProviderMode mode)
         {
-            if (string.IsNullOrWhiteSpace(route))
-            {
-                LogHelper.Debug<DefaultUrlProvider>(
-                    "Couldn't find any page with nodeId={0}. This is most likely caused by the page not being published.",
-                    () => id);
+            if (IsRouteNullOrWhiteSpace(route, umbracoContext, id, current))
                 return null;
-            }
 
             var domainHelper = new DomainHelper(umbracoContext.Application.Services.DomainService);
 
@@ -99,13 +94,8 @@ namespace Umbraco.Web.Routing
             // will not use cache if previewing
             var route = umbracoContext.ContentCache.GetRouteById(id);
 
-            if (string.IsNullOrWhiteSpace(route))
-            {
-                LogHelper.Debug<DefaultUrlProvider>(
-                    "Couldn't find any page with nodeId={0}. This is most likely caused by the page not being published.",
-                    () => id);
+            if (IsRouteNullOrWhiteSpace(route, umbracoContext, id, current))
                 return null;
-            }
 
             var domainHelper = new DomainHelper(umbracoContext.Application.Services.DomainService);
 
@@ -204,6 +194,34 @@ namespace Umbraco.Web.Routing
             // UriFromUmbraco will handle vdir
             // meaning it will add vdir into domain urls too!
             return uris.Select(UriUtility.UriFromUmbraco);
+        }
+
+        bool IsRouteNullOrWhiteSpace(string route, UmbracoContext umbracoContext, int id, Uri current)
+        {
+            if (string.IsNullOrWhiteSpace(route))
+            {
+                if (umbracoContext.PageId != null)
+                {
+                    var urlReferrer = umbracoContext.HttpContext.Request.UrlReferrer;
+
+                    if (urlReferrer != null)
+                        LogHelper.Debug<DefaultUrlProvider>(
+                            "Couldn't find any page with the id = {0}. PageId = {1}. Referrer: {2}",
+                                () => id, () => umbracoContext.PageId, () => urlReferrer);
+                    else
+                        LogHelper.Debug<DefaultUrlProvider>(
+                            "Couldn't find any page with the id = {0}. PageId = {1}.",
+                                () => id, () => umbracoContext.PageId);
+                }
+                else
+                    LogHelper.Debug<DefaultUrlProvider>(
+                        "Couldn't find any page with nodeId = {0}. Url: {1}",
+                            () => id, () => current);
+
+                return true;
+            }
+
+            return false;
         }
 
         #endregion
