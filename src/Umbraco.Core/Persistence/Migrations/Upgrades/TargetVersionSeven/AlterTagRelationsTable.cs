@@ -103,7 +103,7 @@ namespace Umbraco.Core.Persistence.Migrations.Upgrades.TargetVersionSeven
                 //for each tag relation we need to assign it a property type id which must exist in our references, if it doesn't it means that 
                 // someone has tag data that relates to node that is not in the cmsContent table - we'll have to delete it and log it if that is the case.
 
-                var propertyTypeId = propertyTypeIdRef.Where(x => x.NodeId == tr.NodeId && x.TagId == tr.TagId).SingleOrDefault();
+                var propertyTypeId = propertyTypeIdRef.Where(x => x.NodeId == tr.NodeId && x.TagId == tr.TagId).SingleOrDefault()?.PropertyTypeId;
                 if (propertyTypeId == null)
                 {
                     Logger.Warn<AlterTagRelationsTable>("There was no cmsContent reference for cmsTagRelationship for nodeId "
