@@ -82,43 +82,42 @@ namespace Umbraco.Core.Persistence.Migrations.Upgrades.TargetVersionSeven
 
         private void Upgrade()
         {
-            //get all data from the tag relationship table
-            var tagRelations = Context.Database.Fetch<TagRelationshipDto>("SELECT nodeId, tagId FROM cmsTagRelationship");
+            int deletedRows = Context.Database.Execute(@"DELETE TR
+                FROM cmsTagRelationship TR
+                WHERE NOT EXISTS (SELECT DISTINCT cmsTagRelationship.nodeId as NodeId, cmsTags.id as TagId
+                    FROM cmsTags 
+                    JOIN cmsTagRelationship ON cmsTagRelationship.tagId = cmsTags.id
+                    JOIN umbracoNode ON umbracoNode.id = cmsTagRelationship.nodeId
+                    JOIN cmsContent ON cmsContent.nodeId = umbracoNode.id
+                    JOIN cmsContentType ON cmsContentType.nodeId = cmsContent.contentType
+                    JOIN cmsPropertyType ON cmsPropertyType.contentTypeId = cmsContentType.nodeId
+                    JOIN cmsDataType ON cmsDataType.nodeId = cmsPropertyType.dataTypeId
+                    JOIN cmsDataTypePreValues ON cmsDataTypePreValues.dataTypeNodeId = cmsDataType.nodeId
+                    WHERE cmsDataType.controlId = '4023E540-92F5-11DD-AD8B-0800200C9A66' 
+					    AND cmsDataTypePreValues.Alias = 'group' AND cmsTags.[Group] = cmsDataTypePreValues.[Value]
+					    AND cmsTagRelationship.nodeId = TR.NodeId 
+					    AND cmsTags.id = TR.TagId)");
 
-            //get all node id -> property type id references for nodes that are in a tag relations and for properties that are of those nodes that are of the tag data type
-            var propertyTypeIdRef = Context.Database.Fetch<PropertyTypeReferenceDto>(@"SELECT DISTINCT cmsTagRelationship.nodeId as NodeId, cmsTags.id as TagId, cmsPropertyType.id as PropertyTypeId
-                FROM cmsTags 
-                INNER JOIN cmsTagRelationship ON cmsTagRelationship.tagId = cmsTags.id
-                INNER JOIN umbracoNode ON umbracoNode.id = cmsTagRelationship.nodeId
-                INNER JOIN cmsContent ON cmsContent.nodeId = umbracoNode.id
-                INNER JOIN cmsContentType ON cmsContentType.nodeId = cmsContent.contentType
-                INNER JOIN cmsPropertyType ON cmsPropertyType.contentTypeId = cmsContentType.nodeId
-                INNER JOIN cmsDataType ON cmsDataType.nodeId = cmsPropertyType.dataTypeId
-                INNER JOIN cmsDataTypePreValues ON cmsDataTypePreValues.dataTypeNodeId = cmsDataType.nodeId
-                WHERE cmsDataType.controlId = '4023E540-92F5-11DD-AD8B-0800200C9A66'
-                    AND cmsDataTypePreValues.Alias = 'group' AND cmsTags.[Group] = cmsDataTypePreValues.[Value]");
+            Logger.Warn<AlterTagRelationsTable>($"There was no cmsContent reference for {deletedRows} rows in cmsTagRelationship. " +
+                "The new tag system only supports tags with references to content in the cmsContent and cmsPropertyType tables.");
 
-            foreach (var tr in tagRelations)
-            {
-                //for each tag relation we need to assign it a property type id which must exist in our references, if it doesn't it means that 
-                // someone has tag data that relates to node that is not in the cmsContent table - we'll have to delete it and log it if that is the case.
+            int updatedRows = Context.Database.Execute(@"UPDATE TR
+                SET TR.PropertyTypeId = (SELECT cmsPropertyType.id as PropertyTypeId
+                    FROM cmsTags 
+                    JOIN cmsTagRelationship ON cmsTagRelationship.tagId = cmsTags.id
+                    JOIN umbracoNode ON umbracoNode.id = cmsTagRelationship.nodeId
+                    JOIN cmsContent ON cmsContent.nodeId = umbracoNode.id
+                    JOIN cmsContentType ON cmsContentType.nodeId = cmsContent.contentType
+                    JOIN cmsPropertyType ON cmsPropertyType.contentTypeId = cmsContentType.nodeId
+                    JOIN cmsDataType ON cmsDataType.nodeId = cmsPropertyType.dataTypeId
+                    JOIN cmsDataTypePreValues ON cmsDataTypePreValues.dataTypeNodeId = cmsDataType.nodeId
+                    WHERE cmsDataType.controlId = '4023E540-92F5-11DD-AD8B-0800200C9A66' 
+					    AND cmsDataTypePreValues.Alias = 'group' AND cmsTags.[Group] = cmsDataTypePreValues.[Value] 
+					    AND cmsTagRelationship.NodeId = TR.NodeId
+					    AND cmsTagRelationship.TagId = TR.TagId)
+                FROM cmsTagRelationship TR ");
 
-                var propertyTypeId = propertyTypeIdRef.Where(x => x.NodeId == tr.NodeId && x.TagId == tr.TagId).SingleOrDefault()?.PropertyTypeId;
-                if (propertyTypeId == null)
-                {
-                    Logger.Warn<AlterTagRelationsTable>("There was no cmsContent reference for cmsTagRelationship for nodeId "
-                        + tr.NodeId +
-                        ". The new tag system only supports tags with references to content in the cmsContent and cmsPropertyType tables. This row will be deleted: "
-                        + string.Format("nodeId: {0}, tagId: {1}", tr.NodeId, tr.TagId));
-                    Delete.FromTable("cmsTagRelationship").Row(new { nodeId = tr.NodeId, tagId = tr.TagId });
-                }
-                else
-                {
-                    Update.Table("cmsTagRelationship")
-                          .Set(new { propertyTypeId })
-                          .Where(new { nodeId = tr.NodeId, tagId = tr.TagId });
-                }
-            }
+            Logger.Info<AlterTagRelationsTable>($"Updated {updatedRows} rows in cmsTagRelationship with proper propertyTypeId.");
         }
 
         private void Final()
@@ -151,16 +150,6 @@ namespace Umbraco.Core.Persistence.Migrations.Upgrades.TargetVersionSeven
         public override void Down()
         {
             throw new DataLossException("Cannot downgrade from a version 7 database to a prior version, the database schema has already been modified");
-        }
-
-        /// <summary>
-        /// A custom class to map to so that we can linq to it easily without dynamics
-        /// </summary>
-        private class PropertyTypeReferenceDto
-        {
-            public int NodeId { get; set; }
-            public int TagId { get; set; }
-            public int PropertyTypeId { get; set; }
         }
     }
 }
