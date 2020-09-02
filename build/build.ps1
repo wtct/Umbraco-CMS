@@ -11,6 +11,8 @@ param (
 
 # the script can run either from the solution root,
 # or from the ./build directory - anything else fails
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 if ([System.IO.Path]::GetFileName($pwd) -eq "build")
 {
   $mpath = [System.IO.Path]::GetDirectoryName($pwd) + "\build\Modules\"
