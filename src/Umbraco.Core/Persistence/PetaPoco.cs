@@ -768,7 +768,7 @@ namespace Umbraco.Core.Persistence
                 // split to ensure that peta_rn is the last field to be selected, else Page<int> would fail
                 // the resulting sql is not perfect, NPoco has a much nicer way to do it, but it would require
                 // importing large parts of NPoco
-                var pos = sqlSelectRemoved.IndexOf("FROM");
+                var pos = sqlSelectRemoved.IndexOf("FROM", StringComparison.CurrentCultureIgnoreCase);
                 var sqlColumns = sqlSelectRemoved.Substring(0, pos);
                 var sqlFrom = sqlSelectRemoved.Substring(pos);
 
